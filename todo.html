@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .todo-container{
+            width: 350px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .title{
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #input{
+            width: 94%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        #input:focus{
+            border-color: #4CAF50;
+            box-shadow: 0px 0px 5px rgba(76,175,80,0.5);
+        }
+
+        #addbtn{
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            color: #fff;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #addbtn:hover{
+            background: #45a049;
+        }
+
+        ul{
+            margin-top: 15px;
+            padding: 0;
+        }
+
+        li{
+            list-style: none;
+            background: #f2f2f2;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-box{
+            display: flex;
+            gap: 6px;
+        }
+
+        .deletebtn, .editbtn, .savebtn{
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .deletebtn{
+            background: #ff4d4d;
+            color: white;
+        }
+        .deletebtn:hover{
+            background: #e60000;
+        }
+
+        .editbtn{
+            background: #2196F3;
+            color: white;
+        }
+        .editbtn:hover{
+            background: #0b7dda;
+        }
+
+        .savebtn{
+            background: #FFC107;
+            color: #fff;
+        }
+        .savebtn:hover{
+            background: #e0a800;
+        }
+
+        input.edit-field{
+            width: 60%;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #999;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="todo-container">
+        <p class="title">To-Do List</p>
+        <input id="input" type="text" placeholder="Add new task...">
+        <button id="addbtn">Add</button>
+        <ul id="list"></ul>
+    </div>
+
+
+    <script>
+        let input = document.getElementById('input')
+        let addbtn = document.getElementById('addbtn')
+        let list = document.getElementById('list')
+
+        addbtn.addEventListener('click', () => {
+            let listitem = document.createElement('li')
+            let inputval = input.value.trim()
+
+            if (inputval === "") return
+
+            let text = document.createElement('span')
+            text.textContent = inputval
+
+            let btnbox = document.createElement('div')
+            btnbox.className = "btn-box"
+
+            const deletebutton = document.createElement('button')
+            deletebutton.className = 'deletebtn'
+            deletebutton.textContent = 'Delete'
+
+            const editbutton = document.createElement('button')
+            editbutton.className = 'editbtn'
+            editbutton.textContent = 'Edit'
+
+            btnbox.appendChild(editbutton)
+            btnbox.appendChild(deletebutton)
+
+            listitem.appendChild(text)
+            listitem.appendChild(btnbox)
+            list.appendChild(listitem)
+
+            input.value = ""
+
+            deletebutton.addEventListener('click', () => {
+                list.removeChild(listitem)
+            })
+
+            editbutton.addEventListener('click', () => {
+                let editinput = document.createElement('input')
+                editinput.type = 'text'
+                editinput.value = text.textContent
+                editinput.className = 'edit-field'
+
+                let savebutton = document.createElement('button')
+                savebutton.className = 'savebtn'
+                savebutton.textContent = 'Save'
+
+                btnbox.innerHTML = ""
+                btnbox.appendChild(savebutton)
+
+                listitem.insertBefore(editinput, text)
+                listitem.removeChild(text)
+
+                savebutton.addEventListener('click', () => {
+                    text.textContent = editinput.value
+                    listitem.insertBefore(text, editinput)
+                    listitem.removeChild(editinput)
+
+                    btnbox.innerHTML = ""
+                    btnbox.appendChild(editbutton)
+                    btnbox.appendChild(deletebutton)
+                })
+            })
+        })
+    </script>
+
+</body>
+</html>

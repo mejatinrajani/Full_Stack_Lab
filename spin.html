@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball</title>
+    <style>
+        body{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ball{
+            height: 200px;
+            width: 200px;
+            background-color: lightcoral;
+            border-radius: 50%;
+            margin-top: 25%;
+        }
+        .bounce{
+            animation: bounce 3s infinite ease-in-out;
+        }
+        @keyframes bounce{
+            0%{
+                transform: translateY(0px);
+            }
+            30%{
+                transform: translateY(-160px);
+            }
+            50%{
+                transform: translateY(0px);
+            }
+            60%{
+                transform: translateY(-110px);
+            }
+            70%{
+                transform: translateY(0px);
+            }
+            90%{
+                transform: translateY(-50px);
+            }
+            100%{
+                transform: translateY(0px);
+            }
+        }
+        .start{
+            display: grid;
+            place-items: center;
+            position: absolute;
+            background-color: royalblue;
+            height: 80px;
+            width: 150px;
+            color: white;
+            border: solid 2px black;
+            font-size: 30px;
+            border-radius: 20px;
+            padding: 0px 10px; 
+            margin-top: 920px;
+        }
+        .stop{
+            position: absolute;
+            background-color: royalblue;
+            place-items: center;
+            height: 80px;
+            width: 150px;
+            color: white;
+            border: solid 2px black;
+            font-size: 30px;
+            border-radius: 20px;
+            padding: 0px 10px; 
+            margin-top: 920px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="ball" id="ball"></div>
+    <button id="start" class="start">start</button>
+    <button id="stop" class="stop">stop</button>
+    <script>
+        let startbutton = document.getElementById('start')
+        let ball = document.getElementById('ball')
+        let stopbutton = document.getElementById('stop')
+        startbutton.addEventListener('click',()=>{
+            ball.classList.add('bounce')
+            startbutton.style.display = 'none'
+            stopbutton.style.display = 'grid'
+        })
+        stopbutton.addEventListener('click',()=>{
+            ball.classList.remove('bounce')
+            stopbutton.style.display = 'none'
+            startbutton.style.display = 'grid'
+        })
+    </script>
+</body>
+</html>

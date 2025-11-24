@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #0a0e27 0%, #020111 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        #canvas {
+            display: block;
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            min-width: 250px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-panel h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #ffd700;
+        }
+
+        .info-panel p {
+            margin: 5px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .speed-control {
+            display: none;
+        }
+
+        input[type="range"] {
+            display: none;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #ffd700;
+        }
+
+        .legend p {
+            font-size: 12px;
+            margin: 5px 0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="info-panel" id="infoPanel">
+        <h2>The Sun</h2>
+        <p><strong>Type:</strong> G-type Star</p>
+        <p><strong>Radius:</strong> 696,340 km</p>
+        <p><strong>Temperature:</strong> 5,778 K</p>
+        <p><strong>Age:</strong> 4.6 billion years</p>
+    </div>
+
+    <div class="controls">
+        <button id="pauseBtn">Pause</button>
+    </div>
+
+    <div class="legend">
+        <h3>Controls</h3>
+        <p>🖱️ Click & Drag to rotate</p>
+        <p>🔍 Scroll to zoom</p>
+        <p>👆 Click planets for info</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const infoPanel = document.getElementById('infoPanel');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let isPaused = false;
+        let speedMultiplier = 2.0;
+        let rotation = 0;
+        let zoom = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        // Star field
+        const stars = [];
+        for (let i = 0; i < 200; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5,
+                opacity: Math.random()
+            });
+        }
+
+        const planets = [
+            { name: 'Mercury', radius: 4, distance: 80, speed: 0.04, angle: 0, color: '#8c7853', info: { type: 'Terrestrial', radius: '2,439 km', orbitalPeriod: '88 days', moons: 0 } },
+            { name: 'Venus', radius: 9, distance: 120, speed: 0.015, angle: 0, color: '#ffc649', info: { type: 'Terrestrial', radius: '6,051 km', orbitalPeriod: '225 days', moons: 0 } },
+            { name: 'Earth', radius: 10, distance: 160, speed: 0.01, angle: 0, color: '#4a90e2', moon: true, info: { type: 'Terrestrial', radius: '6,371 km', orbitalPeriod: '365 days', moons: 1 } },
+            { name: 'Mars', radius: 6, distance: 200, speed: 0.008, angle: 0, color: '#e27b58', info: { type: 'Terrestrial', radius: '3,389 km', orbitalPeriod: '687 days', moons: 2 } },
+            { name: 'Jupiter', radius: 25, distance: 280, speed: 0.002, angle: 0, color: '#c88b3a', info: { type: 'Gas Giant', radius: '69,911 km', orbitalPeriod: '12 years', moons: 79 } },
+            { name: 'Saturn', radius: 22, distance: 360, speed: 0.0009, angle: 0, color: '#fad5a5', rings: true, info: { type: 'Gas Giant', radius: '58,232 km', orbitalPeriod: '29 years', moons: 82 } },
+            { name: 'Uranus', radius: 15, distance: 420, speed: 0.0004, angle: 0, color: '#4fd0e7', info: { type: 'Ice Giant', radius: '25,362 km', orbitalPeriod: '84 years', moons: 27 } },
+            { name: 'Neptune', radius: 14, distance: 480, speed: 0.0001, angle: 0, color: '#4166f5', info: { type: 'Ice Giant', radius: '24,622 km', orbitalPeriod: '165 years', moons: 14 } }
+        ];
+
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+                star.opacity += Math.random() * 0.02 - 0.01;
+                star.opacity = Math.max(0.3, Math.min(1, star.opacity));
+            });
+        }
+
+        function drawSun(x, y) {
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, 35);
+            gradient.addColorStop(0, '#ffd700');
+            gradient.addColorStop(0.5, '#ffa500');
+            gradient.addColorStop(1, 'rgba(255, 165, 0, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#ffed4e';
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawOrbit(x, y, distance) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, distance * zoom, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawPlanet(planet, x, y) {
+            const planetX = x + Math.cos(planet.angle) * planet.distance * zoom;
+            const planetY = y + Math.sin(planet.angle) * planet.distance * zoom;
+
+            // Planet glow
+            const gradient = ctx.createRadialGradient(planetX, planetY, 0, planetX, planetY, planet.radius * zoom + 5);
+            gradient.addColorStop(0, planet.color);
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(planetX, planetY, planet.radius * zoom + 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Planet
+            ctx.fillStyle = planet.color;
+            ctx.beginPath();
+            ctx.arc(planetX, planetY, planet.radius * zoom, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Saturn's rings
+            if (planet.rings) {
+                ctx.strokeStyle = 'rgba(250, 213, 165, 0.6)';
+                ctx.lineWidth = 3 * zoom;
+                ctx.beginPath();
+                ctx.ellipse(planetX, planetY, planet.radius * zoom * 1.8, planet.radius * zoom * 0.4, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Earth's moon
+            if (planet.moon) {
+                const moonAngle = planet.angle * 12;
+                const moonX = planetX + Math.cos(moonAngle) * planet.radius * 3 * zoom;
+                const moonY = planetY + Math.sin(moonAngle) * planet.radius * 3 * zoom;
+                ctx.fillStyle = '#ccc';
+                ctx.beginPath();
+                ctx.arc(moonX, moonY, 2 * zoom, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            return { planetX, planetY, radius: planet.radius * zoom };
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(2, 1, 17, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawStars();
+
+            const centerX = canvas.width / 2 + offsetX;
+            const centerY = canvas.height / 2 + offsetY;
+
+            drawSun(centerX, centerY);
+
+            planets.forEach(planet => {
+                drawOrbit(centerX, centerY, planet.distance);
+                if (!isPaused) {
+                    planet.angle += planet.speed * speedMultiplier;
+                }
+                drawPlanet(planet, centerX, centerY);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const centerX = canvas.width / 2 + offsetX;
+            const centerY = canvas.height / 2 + offsetY;
+            
+            let clicked = false;
+            planets.forEach(planet => {
+                const planetX = centerX + Math.cos(planet.angle) * planet.distance * zoom;
+                const planetY = centerY + Math.sin(planet.angle) * planet.distance * zoom;
+                const dist = Math.sqrt((e.clientX - planetX) ** 2 + (e.clientY - planetY) ** 2);
+                
+                if (dist < planet.radius * zoom + 10) {
+                    infoPanel.innerHTML = `
+                        <h2>${planet.name}</h2>
+                        <p><strong>Type:</strong> ${planet.info.type}</p>
+                        <p><strong>Radius:</strong> ${planet.info.radius}</p>
+                        <p><strong>Orbital Period:</strong> ${planet.info.orbitalPeriod}</p>
+                        <p><strong>Moons:</strong> ${planet.info.moons}</p>
+                    `;
+                    clicked = true;
+                }
+            });
+            
+            if (!clicked) {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                offsetX += e.clientX - lastMouseX;
+                offsetY += e.clientY - lastMouseY;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            zoom += e.deltaY * -0.001;
+            zoom = Math.min(Math.max(0.3, zoom), 3);
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
+</body>
+</html>

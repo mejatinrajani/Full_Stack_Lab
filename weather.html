@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beautiful Weather App</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+    }
+
+    body {
+        height: 100vh;
+        background: linear-gradient(135deg, #6dd5fa, #2980b9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .app {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 25px;
+        border-radius: 20px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        text-align: center;
+    }
+
+    .app h2 {
+        color: #fff;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .search-box {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .search-box input {
+        flex: 1;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+    }
+
+    .search-box button {
+        padding: 12px 20px;
+        border: none;
+        background: #fff;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .search-box button:hover {
+        background: #f1f1f1;
+    }
+
+    .weather-box img {
+        width: 120px;
+        margin-top: 10px;
+        animation: float 2s infinite ease-in-out;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0); }
+    }
+
+    .temp {
+        font-size: 55px;
+        font-weight: 700;
+        color: #fff;
+        margin-top: 10px;
+    }
+
+    .desc {
+        font-size: 20px;
+        color: #fff;
+        margin-bottom: 15px;
+        text-transform: capitalize;
+    }
+
+    .details {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 25px;
+        color: #fff;
+    }
+
+    .card {
+        background: rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 15px;
+        flex: 1;
+        backdrop-filter: blur(6px);
+    }
+
+    .card h4 {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .card p {
+        font-size: 18px;
+        font-weight: 600;
+        margin-top: 5px;
+    }
+
+    #error {
+        color: #fff;
+        margin-top: 15px;
+        font-size: 14px;
+        font-weight: bold;
+        display: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+    <h2>Weather Finder</h2>
+
+    <div class="search-box">
+        <input type="text" id="city" placeholder="Enter city name..." />
+        <button onclick="getWeather()">Search</button>
+    </div>
+
+    <p id="error">City not found! Try again 🔄</p>
+
+    <div class="weather-box">   
+        <div class="temp" id="temp"></div>
+        <div class="desc" id="desc"></div>
+    </div>
+
+    <div class="details">
+        <div class="card">
+            <h4>Humidity</h4>
+            <p id="humidity">--%</p>
+        </div>
+        <div class="card">
+            <h4>Wind</h4>
+            <p id="wind">-- km/h</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const apiKey = "7e000eb95d7395a67d12ac97461d26eb"; 
+
+    async function getWeather() {
+        const city = document.getElementById("city").value.trim();
+        if (!city) return;
+
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.cod === "404") {
+                document.getElementById("error").style.display = "block";
+                return;
+            } else {
+                document.getElementById("error").style.display = "none";
+            }
+
+            // Updating UI
+            document.getElementById("temp").innerText = `${Math.round(data.main.temp)}°C`;
+            document.getElementById("desc").innerText = data.weather[0].description;
+            document.getElementById("humidity").innerText = data.main.humidity + "%";
+            document.getElementById("wind").innerText = data.wind.speed + " km/h";
+
+        } catch (err) {
+            document.getElementById("error").innerText = "API Error!";
+            document.getElementById("error").style.display = "block";
+        }
+    }
+</script>
+
+</body>
+</html>
