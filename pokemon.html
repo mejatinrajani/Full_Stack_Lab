@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        #search {
+            width: 300px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card img {
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <input type="text" id="search" placeholder="Search Pokemon...">
+
+    <div class="grid" id="pokemonContainer"></div>
+
+    <script>
+        const apiurl = "https://pokeapi.co/api/v2/pokemon?offset=0&limit=100";
+        const container = document.getElementById("pokemonContainer");
+        const searchBox = document.getElementById("search");
+        let allPokemon = [];
+
+        async function fetchPokemonList() {
+            const response = await fetch(apiurl);
+            const data = await response.json();
+            allPokemon = data.results;
+
+            displayPokemon(allPokemon);
+        }
+
+        // Display Pokémon Cards
+        async function displayPokemon(pokemonList) {
+            container.innerHTML = "";
+
+            for (let pokemon of pokemonList) {
+
+                const res = await fetch(pokemon.url);
+                const info = await res.json();
+
+                const card = `
+                    <div class="card">
+                        <img src="${info.sprites.front_default}" alt="${pokemon.name}">
+                        <h3>${pokemon.name.toUpperCase()}</h3>
+                    </div>
+                `;
+
+                container.innerHTML += card;
+            }
+        }
+
+        searchBox.addEventListener("input", () => {
+            const searchText = searchBox.value.toLowerCase();
+
+            const filtered = allPokemon.filter(poke =>
+                poke.name.toLowerCase().includes(searchText)
+            );
+
+            displayPokemon(filtered);
+        });
+
+        fetchPokemonList();
+    </script>
+</body>
+</html>
